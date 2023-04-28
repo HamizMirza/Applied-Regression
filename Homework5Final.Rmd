@@ -1,0 +1,62 @@
+---
+title: "Homework5Final"
+author: "Hamiz Mirza"
+date: "2023-04-23"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Question 1. (50 pts)
+(Ridge and LASSO) Analyze the data Question1.txt, there are 16 predictor variable and 1 reponse Y. But I only want to use the X1-X7 to predict Y in this problem.
+
+```{r}
+DataQ1 <- read.table("Question1.txt", header = TRUE)
+DataQ2 <- read.table("Question2.txt", header = TRUE)
+DataQ1
+DataQ2
+```
+
+(a) Now use the Ridge Regression to analyze the data and get the optimal values of , then estimate the coefficients. Pleas explain which covariates are important according to the magnituce? You can use any of two functions discussed in our class to work on this problem.
+
+```{r}
+library(glmnet)
+X <- DataQ1[, 1:7]
+Y <- DataQ1$Y
+
+scalex <- scale(X)
+scaley <- scale(Y)
+CV_Ridge <- cv.glmnet(scalex,scaley,alpha = 0)
+predict(glmnet(scalex,scaley,alpha = 0), type="coefficients", s=CV_Ridge$lambda.min)
+```
+
+(b) Use LASSO method for the variable selection, which variables are selected? Provide detailed code, figures and explanations of your results. You can use either lars or glmnet.
+
+```{r}
+CV_Lasso <- cv.glmnet(scalex, scaley, alpha = 1)
+round(coef(CV_Lasso,s = CV_Lasso$lambda.min),3)
+
+```
+
+
+Question 2. (50 pts)
+(PCA) Analyze the data Question2.txt. This dataset contains the results of qualifying exam- inations for 25 graduate students in mathematics at a U.S. university. The students sat for examinations in differential geometry, complex analysis, algebra, real analysis, and statistics. PCA can help reduce these five original vectors of test scores into one or two vectors that account for most of the information in the original dataset.
+
+(a) First, do not standardize the data for the PCA analysis. You can use any functions we learned in the class to do PCA analysis. What are the eigenvalues and eigenvectors? How many principal components are need to explain at least 80% of variances?
+
+```{r}
+eigen(cov(DataQ2))
+```
+
+(b) Check the correlation between PC1 and the 5 covariates and explain your results.
+```{r}
+input_value <- as.matrix(DataQ2)%*%eigen(cov(DataQ2))$vectors
+cor(input_value[,1],DataQ2)
+```
+(c) Now, standardize the data for the PCA analysis, repeat (a)’s analysis.
+```{r}
+eigen(cor(DataQ2))
+```
+

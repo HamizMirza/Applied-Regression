@@ -1,0 +1,79 @@
+---
+title: "Homework4Final"
+author: "Hamiz Mirza"
+date: "2023-04-01"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+496 individuals were asked to taste and then rate a particular type of ice cream on a 9-point scale (1 to 9 with 1 equating to not liking and 9 equating to really liking). The ice cream given to the individuals had a fat proportion level of 0, 0.04, . . . , or 0.28 (fat). We treat “fat” as continuous variable in this question. The data for 496 individuals is randomly split into two parts. The training dataset (including 471 individuals) and the test dataset (including 25 individulas) are available in “ice_cream1.csv” and “ice_cream2.csv” respectively.
+
+```{r}
+training <- read.csv('ice_cream1.csv')
+testing <- read.csv('ice_cream2.csv')
+training
+testing
+```
+(a) Obviously, the ratings 1-9 are ordinal data. Please use the ordinal response regression model to regress the ordinal response “rating” on “fat” by utilizing the training dataset only. How many unknown regression parameters in the above ordinal response regression model? [Hint: please use the R function
+“factor()” to transform the vector “rating” into a vector of factor values, otherwise, it will be treated as continuous numbers]
+
+```{r}
+training$rating <- factor(training$rating, ordered = TRUE)
+training
+library(MASS)
+
+training_ordinal <- polr(factor(rating) ~ fat, method = "logistic", data = training)
+summary(training_ordinal)
+```
+There are 9 unknown regression coefficients.
+
+(b) Please construct drop-in-deviance test to check whether “fat” is needed based on the above fitted ordinal response regression model. What do you find and why?
+```{r}
+library(car)
+Anova(training_ordinal, test = "Chisq")
+```
+What I can conclude from the drop-in-deviance test is that fat is necessary for the model since the deviance is statistically significant.
+
+(c) Suppose we ignore the order of the ratings 1-9 in this part and treat “rating” as a nominal response. Please use the nominal resp
+onse regression model to regress the nominal response “rating” on “fat”” by utilizing the training dataset only. How many unknown regression parameters in the above nominal response regression model?
+
+```{r}
+library(nnet)
+training_nom <- multinom(factor(rating) ~ fat, data = training)
+training_nom
+summary(training_nom)
+```
+16 unknown regression coefficients.
+
+(d) Please construct drop-in-deviance test to check whether “fat” is needed based on the above fitted nominal response regression model.
+
+```{r}
+Anova(training_nom, test = "Chisq")
+```
+Fat is against needed based upon the p value.
+
+(e) Now we consider the test dataset. calculate test error rate using ordinal model.
+
+```{r}
+testing$rating <- factor(testing$rating, ordered = TRUE)
+prediction_ordinal <- predict(training_ordinal, newdata = testing, type = "class")
+
+prediction_testing <- as.character(prediction_ordinal)
+actual_testing <- as.character(testing$rating)
+error_rate_ord <- mean(prediction_ordinal != actual_testing)
+error_rate_ord
+
+```
+
+(f) Calculate test error rate using nominla model. Compare with (e), which model is better?
+
+
+```{r}
+prediction_nom <- predict(training_nom, newdata = testing, type = "class")
+error_rate_nom <- mean(as.character(prediction_nom) != as.character(testing$rating))
+error_rate_nom
+```
+The ordinal model is better as it produced a lower error rate.
